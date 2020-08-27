@@ -18,6 +18,7 @@ import org.gradle.tooling.events.SuccessResult;
 import org.gradle.tooling.events.task.TaskFinishEvent;
 import org.gradle.tooling.events.task.TaskOperationDescriptor;
 import org.gradle.tooling.events.task.TaskSuccessResult;
+import org.gradle.tooling.events.test.Destination;
 import org.gradle.tooling.events.test.TestOperationDescriptor;
 import org.gradle.tooling.events.test.TestOutputDescriptor;
 
@@ -57,6 +58,7 @@ public final class ExecutionPageNameLabelProvider extends LabelProvider implemen
     public StyledString getStyledText(Object element) {
         if (element instanceof OperationItem) {
             OperationItem operationItem = (OperationItem) element;
+            System.out.println("t " + operationItem.getDescriptor().getClass());
             String rawLabel = renderCompact(operationItem);
             StyledString styledLabel = new StyledString(rawLabel);
 
@@ -125,7 +127,7 @@ public final class ExecutionPageNameLabelProvider extends LabelProvider implemen
     }
 
     private static String renderTestOutput(TestOutputDescriptor descriptor) {
-        return String.format("%s: %s", descriptor.getDestination().toString(), descriptor.getMessage());
+        return descriptor.getMessage();
     }
 
     private static String renderOther(OperationDescriptor descriptor) {
@@ -153,6 +155,8 @@ public final class ExecutionPageNameLabelProvider extends LabelProvider implemen
     }
 
     private Image calculateImage(OperationItem operationItem) {
+        System.out.println("i " + operationItem.getDescriptor().getClass());
+
         if (operationItem.getFinishEvent() != null) {
             OperationResult result = operationItem.getFinishEvent().getResult();
             if (result instanceof FailureResult) {
@@ -163,6 +167,13 @@ public final class ExecutionPageNameLabelProvider extends LabelProvider implemen
                 return PluginImages.OPERATION_SUCCESS.withState(PluginImage.ImageState.ENABLED).getImage();
             } else {
                 return null;
+            }
+        } else if (operationItem.getDescriptor() instanceof TestOutputDescriptor) {
+            TestOutputDescriptor testOutput = (TestOutputDescriptor) operationItem.getDescriptor();
+            if (testOutput.getDestination() ==  Destination.StdOut) {
+                return PluginImages.OPERATION_STDOUT.withState(PluginImage.ImageState.ENABLED).getImage();
+            } else {
+                return PluginImages.OPERATION_STDERR.withState(PluginImage.ImageState.ENABLED).getImage();
             }
         } else {
             return PluginImages.OPERATION_IN_PROGRESS.withState(PluginImage.ImageState.ENABLED).getImage();
